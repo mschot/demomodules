@@ -1,0 +1,34 @@
+{
+    "name": "schot/module-live-stock",
+    "description": "Live Stock Display for Magento 2 by Schot",
+    "require": {
+        "php": ">=7.4",
+        "magento/framework": "*",
+        "magento/module-catalog": "*",
+        "magento/module-catalog-inventory": "*",
+        "magento/module-inventory": "*",
+        "magento/module-inventory-api": "*",
+        "magento/module-inventory-sales-api": "*",
+        "magento/module-inventory-sales-admin-ui": "*",
+        "magento/module-inventory-catalog-api": "*"
+    },
+    "type": "magento2-module",
+    "version": "1.0.0",
+    "license": [
+        "proprietary"
+    ],
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Schot\\LiveStock\\": ""
+        }
+    },
+    "authors": [
+        {
+            "name": "Schot",
+            "email": "info@schot.com"
+        }
+    ]
+}

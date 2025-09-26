@@ -1,0 +1,44 @@
+<?php
+    /** @var \Schot\LiveStock\Block\LiveStock $block */
+    /** @var \Schot\LiveStock\ViewModel\StockInfo $viewModel */
+    $viewModel = $block->getData('view_model');
+?>
+
+<?php
+    $_product = $block->getProduct();
+    $show_livestock = $viewModel->shouldDisplayLiveStock($_product);
+    $livestock_limit = $viewModel->getLivestockLimit();
+    $stock_qty = $viewModel->getStockQuantity($_product);
+?>
+
+
+
+<?php if ( $show_livestock ): ?>
+    <?php if ($_product->getTypeId() == 'configurable'): ?>
+        <!-- For configurable products, stock will be updated via JavaScript -->
+        <?php
+            $stockByProductId = $viewModel->getConfigurableChildrenStock($_product);
+        ?>
+        <script type="text/javascript">
+            window.techsilLiveStock = window.techsilLiveStock || {};
+            window.techsilLiveStock.stockData = <?= json_encode($stockByProductId) ?>;
+            window.techsilLiveStock.stockLimit = <?= (int)$livestock_limit ?>;
+        </script>
+
+        <span class="livestock">
+            <?= __('Availability') ?>: <?= __('Select Product') ?>
+        </span>
+    <?php else: ?>
+        <!-- For simple products, show stock directly -->
+        <span class="livestock">
+            <?= __('Availability') ?>:
+            <?php if ($stock_qty > $livestock_limit): ?>
+                <?= $livestock_limit ?><?= __('+ in stock'); ?>
+            <?php elseif ($stock_qty < 1): ?>
+                <?= __('Contact us'); ?>
+            <?php else: ?>
+                <?= $stock_qty ?> <?= __('in stock'); ?>
+            <?php endif; ?>
+        </span>
+    <?php endif; ?>
+<?php endif; ?>

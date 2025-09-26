@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>        
+        <!-- Remove default In Stock/Out of Stock blocks -->
+        <referenceBlock name="product.info.simple" remove="true"/>  
+        <referenceBlock name="product.info.configurable" remove="true"/>  
+
+        
+        <!-- Add LiveStock block to stock/sku container -->
+        <referenceContainer name="product.info.stock.sku">
+            <block class="Schot\LiveStock\Block\LiveStock" name="schot.livestock" template="Schot_LiveStock::livestock.phtml" before="-" cacheable="true">
+                <arguments>
+                    <argument name="view_model" xsi:type="object">Schot\LiveStock\ViewModel\StockInfo</argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="schot" translate="label" sortOrder="100">
+            <label>Schot</label>
+        </tab>
+
+        <section id="schot_livestock" translate="label" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Live Stock</label>
+            <tab>schot</tab>
+            <resource>Schot_LiveStock::config</resource>
+            
+            <group id="general" translate="label" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>General</label>
+                <field id="livestock_limit" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Display Limit</label>
+                    <comment>The largest amount of live stock data to be displayed. When this limit is reached, the live stock will be displayed as "100+" or similar.</comment>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>
