@@ -8,7 +8,7 @@
         
         <!-- Add LiveStock block to stock/sku container -->
         <referenceContainer name="product.info.stock.sku">
-            <block class="Schot\LiveStock\Block\LiveStock" name="schot.livestock" template="Schot_LiveStock::livestock.phtml" before="-" cacheable="true">
+            <block class="Schot\LiveStock\Block\LiveStock" name="schot.livestock" template="Schot_LiveStock::livestock.phtml" before="-" cacheable="false">
                 <arguments>
                     <argument name="view_model" xsi:type="object">Schot\LiveStock\ViewModel\StockInfo</argument>
                 </arguments>
