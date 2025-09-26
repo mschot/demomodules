@@ -11,6 +11,9 @@ This customer only used simples and configurables with select dropdowns (no swat
 
 ![Configurable](readmeimages/configurable.png)
 
+## Installation
+To install copy app/code/Schot to your app/code folder and run `bin/magento setup:upgrade && bin/magento setup:di:compile && bin/magento cache:flush` in your root directory
+
 ## Product Set up
 For each product that you want to show the stock on you should enable "Display live stock"
 
