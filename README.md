@@ -24,6 +24,6 @@ To set the limit go to Stores >> Configuration >> Schot >> LiveStock
 
 ![Product setup](readmeimages/config.png)
 
-## Limitation
+## Limitations
 At the moment the block is set to not be cachable, I will be updating this after I have enabled cache flushing of the block and page cache for that product after stock update.
 

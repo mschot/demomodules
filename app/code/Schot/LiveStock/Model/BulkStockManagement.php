@@ -3,7 +3,6 @@ namespace Schot\LiveStock\Model;
 
 use Schot\LiveStock\Api\BulkStockManagementInterface;
 use Schot\LiveStock\Model\BulkSalableQtyProvider;
-use Magento\InventorySalesAdminUi\Model\GetSalableQuantityDataBySku;
 use Magento\InventoryCatalogApi\Api\DefaultStockProviderInterface;
 
 class BulkStockManagement implements BulkStockManagementInterface
