@@ -5,7 +5,7 @@ namespace Schot\LiveStock\ViewModel;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
 use Magento\Catalog\Model\Product;
 use Psr\Log\LoggerInterface;
-use Magento\CatalogInventory\Api\StockRegistryInterface;
+use Schot\LiveStock\Api\BulkStockManagementInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\ScopeInterface;
 
@@ -17,9 +17,9 @@ class StockInfo implements ArgumentInterface
     private $logger;
 
     /**
-     * @var StockRegistryInterface
+     * @var BulkStockManagementInterface
      */
-    private $stockRegistry;
+    private $bulkStockManagement;
 
     /**
      * @var ScopeConfigInterface
@@ -28,16 +28,16 @@ class StockInfo implements ArgumentInterface
 
     /**
      * @param LoggerInterface $logger
-     * @param StockRegistryInterface $stockRegistry
+     * @param BulkStockManagementInterface $bulkStockManagement
      * @param ScopeConfigInterface $scopeConfig
      */
     public function __construct(
         LoggerInterface $logger,
-        StockRegistryInterface $stockRegistry,
+        BulkStockManagementInterface $bulkStockManagement,
         ScopeConfigInterface $scopeConfig
     ) {
         $this->logger = $logger;
-        $this->stockRegistry = $stockRegistry;
+        $this->bulkStockManagement = $bulkStockManagement;
         $this->scopeConfig = $scopeConfig;
     }
 
@@ -65,14 +65,19 @@ class StockInfo implements ArgumentInterface
             return 0;
         }
 
-        try {
-            // Use direct stock registry to get the actual qty value
-            $stockItem = $this->stockRegistry->getStockItem($product->getId());
-            return (float)$stockItem->getQty();
+        $sku = $product->getSku();
+        try {                        
+            $stockData = $this->bulkStockManagement->getBulkStock([$sku]);            
         } catch (\Exception $e) {
             $this->logger->debug('LiveStock: Could not get stock quantity for SKU ' . $product->getSku() . ' - ' . $e->getMessage());
             return 0;
         }
+
+        if (empty($stockData[$sku])) {
+            return 0;
+        }
+
+        return (int)$stockData[$sku]['qty'];
     }
     
     /**
@@ -87,32 +92,41 @@ class StockInfo implements ArgumentInterface
             return [];
         }
 
-        try {
-            // Get all child products
-            $childProducts = $configurableProduct->getTypeInstance()->getUsedProducts($configurableProduct);
-            $stockByProductId = [];
+        $childProducts = $configurableProduct->getTypeInstance()->getUsedProducts($configurableProduct);            
+        foreach ($childProducts as $child) {                
+            $productIdToSku[$child->getId()] = $child->getSku();
+        }
 
-            foreach ($childProducts as $child) {
-                try {
-                    // Get direct stock quantity for each child product
-                    $stockItem = $this->stockRegistry->getStockItem($child->getId());
-                    $qty = (float)$stockItem->getQty();
-
-                    $stockByProductId[$child->getId()] = [
-                        'qty' => $qty,
-                        'sku' => $child->getSku()
-                    ];
-                } catch (\Exception $childException) {
-                    $this->logger->debug('LiveStock: Could not get stock for child SKU ' . $child->getSku());
-                    // Continue to next child product
-                }
-            }
-
-            return $stockByProductId;
+        try {                    
+            $childSkus = array_values($productIdToSku);    
+            $bulkStockData = $this->bulkStockManagement->getBulkStock($childSkus);                                    
         } catch (\Exception $e) {
             $this->logger->error('LiveStock: Error getting configurable children stock: ' . $e->getMessage());
             return [];
         }
+
+        return $this->mapStockDataToIds($bulkStockData, $productIdToSku);
+    }
+    
+    private function mapStockDataToIds($stockData, $productIdToSku) 
+    {
+        $stockByProductId = [];    
+        foreach ($productIdToSku as $productId => $sku) {
+            if (empty($stockData[$sku])) {
+                $stockByProductId[$productId] = [
+                    'qty' => 0,
+                    'sku' => $sku
+                ];                    
+                continue;
+            } 
+
+            $stockByProductId[$productId] = [
+                'qty' => (int)$stockData[$sku]['qty'],
+                'sku' => $sku
+            ];
+        }
+
+        return $stockByProductId;
     }
 
     /**

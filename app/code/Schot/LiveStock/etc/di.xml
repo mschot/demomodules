@@ -3,4 +3,10 @@
         xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <preference for="Schot\LiveStock\Api\BulkStockManagementInterface"
                 type="Schot\LiveStock\Model\BulkStockManagement"/>
+
+    <type name="Magento\InventoryReservations\Model\AppendReservations">
+        <plugin name="flush_livestock_cache_plugin"
+                type="Schot\LiveStock\Plugin\FlushLiveStockCachePlugin"
+                sortOrder="10"/>
+    </type>
 </config>

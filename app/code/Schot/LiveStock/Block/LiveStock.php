@@ -76,7 +76,7 @@ class LiveStock extends Template implements IdentityInterface
     public function getIdentities()
     {
         $product = $this->getProduct();
-        return $product ? [$product->getIdentities(), "livestock_" . $product->getId()]  : [];
+        return $product ? ["livestock_" . $product->getId()] : []; 
     }
 
     /**

@@ -44,50 +44,79 @@ class BulkSalableQtyProvider
             return [];
         }
 
-        try {
-            $connection = $this->resourceConnection->getConnection();
-            $tableName = $connection->getTableName('inventory_stock_' . $stockId);
-
-            $select = $connection->select()
-                ->from($tableName, ['sku', 'quantity', 'is_salable'])
-                ->where('sku IN (?)', $skus);
-
-            $result = $connection->fetchAll($select);
-
-            // Transform to match MSI format
-            $stockData = [];
-            foreach ($result as $row) {
-                $stockData[$row['sku']] = [
-                    [
-                        'stock_name' => 'Default Stock',
-                        'qty' => (float) $row['quantity'],
-                        'manage_stock' => true,
-                        'is_salable' => (bool) $row['is_salable']
-                    ]
-                ];
-            }
-
-            // Add missing SKUs
-            foreach ($skus as $sku) {
-                if (!isset($stockData[$sku])) {
-                    $stockData[$sku] = [
-                        [
-                            'stock_name' => 'Default Stock',
-                            'qty' => 0,
-                            'manage_stock' => true,
-                            'is_salable' => false
-                        ]
-                    ];
-                }
-            }
-
-            return $stockData;
-
-        } catch (\Exception $e) {
-            $this->logger->error('Error getting bulk salable quantities: ' . $e->getMessage());
-        }
+        $stock = $this->getStock($skus, $stockId);
+        $reservations = $this->getReservations($skus, $stockId);
+        $stockData = $this->combineStockAndReservations($stock, $reservations);            
+        return $stockData;
+        
         return [];
     }
+
+    private function combineStockAndReservations($stock, $reservations)
+    {
+        $stockData = [];
+        foreach ($stock as $row) {
+            $sku = $row['sku'];
+            $indexedQty = (int) $row['quantity'];
+            $reservationQty = $reservations[$sku] ?? 0;
+            $salableQty = $indexedQty + $reservationQty;
+
+            $stockData[$sku] = [                    
+                'stock_name' => 'Default Stock',
+                'qty' => $salableQty, 
+                'indexed_qty' => $indexedQty,  
+                'reservation_qty' => $reservationQty,  
+                'manage_stock' => true,
+                'is_salable' => (bool) $row['is_salable']                    
+            ];
+        }
+
+        return $stockData;
+    }
+
+    private function getStock($skus, $stockId)
+    {
+        $connection = $this->resourceConnection->getConnection();
+        $stockTableName = $connection->getTableName('inventory_stock_' . $stockId);
+        $stockSelect = $connection->select()
+            ->from($stockTableName, ['sku', 'quantity', 'is_salable'])
+            ->where('sku IN (?)', $skus);
+
+        $result = $connection->fetchAll($stockSelect);
+
+        $skusFound = array_column($result, 'sku');
+        $skusMissing = array_diff($skus, $skusFound);
+        foreach ($skusMissing as $sku) {
+            $result[] = [
+                'sku' => $sku,
+                'quantity' => 0,
+                'is_salable' => false
+            ];
+        }
+
+        return $result;    
+    }
+
+    private function getReservations($skus, $stockId)
+    {
+        $connection = $this->resourceConnection->getConnection();
+        $tableName = $connection->getTableName('inventory_reservation');
+        $select = $connection->select()
+            ->from($tableName, ['sku', 'reservation_qty' => 'SUM(quantity)'])
+            ->where('sku IN (?)', $skus)
+            ->where('stock_id = ?', $stockId)
+            ->group('sku');
+
+        $reservationResult = $connection->fetchAll($select);
+
+        $reservations = [];
+        foreach ($reservationResult as $row) {
+            $reservations[$row['sku']] = (int) $row['reservation_qty'];
+        }
+
+        return $reservations;
+    }
+     
 
 
 }
